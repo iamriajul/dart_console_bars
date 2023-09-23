@@ -136,4 +136,8 @@ class FillingBar {
     stdout.write("\r");
     stdout.write(frame);
   }
+
+  void dispose() {
+    _clock.stop();
+  }
 }
