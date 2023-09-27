@@ -16,7 +16,7 @@ class FillingBar {
   late int max;
 
   // Time
-  final _clock = Stopwatch();
+  final _createdAt = DateTime.now();
 
   /// Whether a timer should be present
   bool time;
@@ -81,10 +81,6 @@ class FillingBar {
       throw StdoutException(
           "Could not get terminal width, try specifying a width manually");
     }
-    if (time) {
-      _clock.start();
-      scheduleMicrotask(autoRender);
-    }
     _render();
   }
 
@@ -100,29 +96,19 @@ class FillingBar {
     _render();
   }
 
-  /// Automatically updates the frame asynchronously
-  void autoRender() async {
-    while (_clock.isRunning) {
-      await Future.delayed(Duration(seconds: 1));
-      _render();
-    }
-  }
-
   /// Renders a frame of the bar
   void _render() {
     _progress = ((_current / _total) * max).toInt();
     if (_progress >= max) {
       _progress = max;
-      if (_clock.isRunning) {
-        _clock.stop();
-      }
     }
     String timeStr = "";
     if (time) {
-      final rate = _clock.elapsedMicroseconds / (_current == 0 ? 1 : _current);
+      final elapsed = DateTime.now().difference(_createdAt);
+      final rate = elapsed.inMicroseconds / (_current == 0 ? 1 : _current);
       final eta = Duration(microseconds: ((_total - _current) * rate).toInt());
       timeStr = "[ " +
-          _clock.elapsed.toString().substring(0, 10) +
+          elapsed.toString().substring(0, 10) +
           " / " +
           eta.toString().substring(0, 10) +
           " ]";
@@ -135,9 +121,5 @@ class FillingBar {
         "$_desc : ${fill * _progress}${space * (max - _progress)} $_current/$_total $perc $timeStr";
     stdout.write("\r");
     stdout.write(frame);
-  }
-
-  void dispose() {
-    _clock.stop();
   }
 }
